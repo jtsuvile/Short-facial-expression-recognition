@@ -98,14 +98,14 @@ def runTextTrial(currTrial, win, instructions, stimText):
     return fullRating
 
 def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation):
-    for key in event.getKeys():
-        if key in ['escape']:
-            core.quit() # quit if they press escape
-            win.close()
     #print(currTrial)
     instructions.setText(currTrial['promptText'])
     event.clearEvents()
+    fixation.draw()
+    instructions.draw()
+    answerGuide.draw()
     win.flip()
+    core.wait(0.5)
     instructions.draw()
     answerGuide.draw()
     RT = core.Clock() 
@@ -133,7 +133,8 @@ def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation)
                 thisResp = 1             # positive
                 reactionTime = thisKey[1]
             elif thisKey[0] in ['q', 'escape']:
-                core.quit()  # abort experiment
+                win.close()
+                core.quit()
     fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'],'rating': thisResp, 'startTime': stimulusTime, 'timeStamp':reactionTime}
     print(fullRating)
     return fullRating
