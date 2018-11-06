@@ -97,7 +97,7 @@ def runTextTrial(currTrial, win, instructions, stimText):
     fullRating = {'stimText':currTrial['stimulusText'],'showOrder': currTrial['trialIndex'],'rating': rating, 'startTime': stimulusTime, 'timeStamp':decisionTime, 'choiceHistory':choiceHistory}
     return fullRating
 
-def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation):
+def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard):
     #print(currTrial)
     instructions.setText(currTrial['promptText'])
     event.clearEvents()
@@ -108,33 +108,33 @@ def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation)
     core.wait(0.5)
     instructions.draw()
     answerGuide.draw()
-    RT = core.Clock() 
     img.setImage(currTrial['trialImage'])
     img.draw()
     win.flip()
     stimulusTime = core.getAbsTime()
-    RT.reset()
+    stimulusTimeKeyStyle = core.getTime()
+    keyboard.clearEvents()
+    clock = core.Clock()
     core.wait(0.5)
     fixation.draw()
     instructions.draw()
     answerGuide.draw()
     win.flip()
     thisResp=0
-    reactionTime = 10
-    clock = core.Clock()
+    keydown = 0
+    keyup = 0
     while thisResp==0 and clock.getTime() <= 10.0:
-        allKeys=event.getKeys(keyList=['f','j','q'],timeStamped=RT)
+        allKeys=keyboard.getKeys(keys=['f','j','q'], clear=True, etype=keyboard.KEY_RELEASE)
         for thisKey in allKeys:
-            print(thisKey)
-            if thisKey[0]=='f':
+            keyup = thisKey.time
+            keydown = thisKey.time - thisKey.duration
+            if thisKey.key=='f':
                 thisResp = -1            # negative
-                reactionTime = thisKey[1]
-            elif thisKey[0]=='j':
+            elif thisKey.key=='j':
                 thisResp = 1             # positive
-                reactionTime = thisKey[1]
-            elif thisKey[0] in ['q', 'escape']:
+            elif thisKey.key in ['q', 'escape']:
                 win.close()
                 core.quit()
-    fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'],'rating': thisResp, 'startTime': stimulusTime, 'timeStamp':reactionTime}
+    fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'], 'rating': thisResp, 'startTime': stimulusTime,'startTime2': stimulusTimeKeyStyle, 'keydown':keydown, 'keyup':keyup}
     print(fullRating)
     return fullRating

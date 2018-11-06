@@ -17,7 +17,7 @@ sys.path.append('C:\\Projects\\Faces\\')
 import time
 import os
 #import inspect
-from psychopy import visual,event,core
+from psychopy import visual,event,core, iohub
 import numpy as np
 from trialFunctions import runFaceTrialPosNeg, generateFaceTrials, runTextTrial, generateTextTrials
 if record:
@@ -35,13 +35,23 @@ if not os.path.exists(directory):
     os.makedirs(directory)
     os.makedirs(video_loc)
     os.makedirs(beh_loc)
-    
+
+# instructions are set here - you can find from the code where each gets called.
+# todo: move instructions to a separate text file (not necessarily trivial, psychopy does not seem to want to show newline character when reading from file)
 instrTexts = ['You will soon start a new task where you are asked to evaluate facial expressions from photographs. \n\nThe faces will be presented in the centre of the screen and they will appear for about half a second only. For each face decide whether the expression on the face is a negative or a positive one. You may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nThe next face will be presented after you have responded to the previous one or at the latest after 10 seconds since you saw the previous face. There will be a short practice first where your responses will not be scored and I will tell you when the real task starts. \n\nPlease press any key to continue.', 
               'Please place your hands on the keyboard so that your right index finger is on the \'j\' key and your left index finger is on the \'f\' key. \n\nPlease press  \'j\' or \'f\' to continue.',
               'If you think the mood of the person you see is negative, press \'f\' on your keyboard.',
               'If you think the mood of the person you see is positive, press \'j\' on your keyboard.',
               'Next, you will start the actual experiment. Some of the facial expressions might be very subtle. \n\nRemember, you may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nPlease press  \'j\' or \'f\' to start the actual task.',
-              'Please press  \'j\' or \'f\' to continue the task.']
+              'Please press  \'j\' or \'f\' to continue the task.',
+              'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.']
+
+exampleImages = [scriptloc + '\\happy_example.jpg',
+                 scriptloc + '\\sad_example.jpg']
+
+# use iohub and keyboard to capture key press events
+io = iohub.launchHubServer()
+keyboard = io.devices.keyboard
 
 ##
 # Create all the tasks that will be shown to the subjects 
@@ -100,74 +110,68 @@ newTaskText = visual.TextStim(
     pos = (0,250),
     color = 'black')
 
-
 ##
 # Run the actual experiment
 ##
 
 #Todo: add notification of video recording
 
+
 if record:
     timestr_text = time.strftime("%Y%m%d-%H_%M_%S")    
     videoOutfile = video_loc+'sub_'+str(subid)#+'_'+'video_'+timestr_text+'.avi'
     startRecordingProc(videoOutfile)
 
-# give the subject instructions for PANAS
-newTaskText.setText('Welcome to this experiment.\n\nThe following task consists of a number of words that describe diferent feelings and emotions. Read each item and then indicate in the scale below to what extent you feel this way right now. \n\nPlease press any key to start')
-newTaskText.draw()
-win.flip()
-event.waitKeys()
-#
-## make a text file to save data from text trials
-timestr_text = time.strftime("%Y%m%d-%H_%M_%S")
-textFileName = 'textResponses'
-textDataFile = open(beh_loc+'sub_'+str(subid)+'_'+textFileName+'_'+timestr_text+'.csv', 'w')  # a simple text file with 'comma-separated-values'
-textDataFile.write('stimulusWord,showOrder,response,timeStamp,timeToResponse\n')
-##run text trials
-for currTrial in textTrials:
-    res = runTextTrial(currTrial, win, instructions, stimText)
-    rating = (res['rating'] or -1) #returns -1 in case rating wasn't done within the specified time frame
-    textDataFile.write('%s,%i,%i,%i,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
-textDataFile.close()
+## give the subject instructions for PANAS
+#newTaskText.setText('Welcome to this experiment.\n\nThe following task consists of a number of words that describe diferent feelings and emotions. Read each item and then indicate in the scale below to what extent you feel this way right now. \n\nPlease press any key to start')
+#newTaskText.draw()
+#win.flip()
+#event.waitKeys()
+##
+### make a text file to save data from text trials
+#timestr_text = time.strftime("%Y%m%d-%H_%M_%S")
+#textFileName = 'textResponses'
+#textDataFile = open(beh_loc+'sub_'+str(subid)+'_'+textFileName+'_'+timestr_text+'.csv', 'w')  # a simple text file with 'comma-separated-values'
+#textDataFile.write('stimulusWord,showOrder,response,timeStamp,timeToResponse\n')
+###run text trials
+#for currTrial in textTrials:
+#    res = runTextTrial(currTrial, win, instructions, stimText)
+#    rating = (res['rating'] or -1) #returns -1 in case rating wasn't done within the specified time frame
+#    textDataFile.write('%s,%i,%i,%i,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
+#textDataFile.close()
 
 # give the subject instructions for face rating task
+# the instructions for faces are so long we need to shift the position of the text
 newTaskText.setPos((0,50))
 newTaskText.setText(instrTexts[0])
 newTaskText.draw()
 win.flip()
-event.waitKeys()
+keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
+print keyboard.state 
 win.flip()
 
+# moving text back after the long instructions
 newTaskText.setPos((0,300))
-newTaskText.setText(instrTexts[1])
-newTaskText.draw()
-win.flip()
-event.waitKeys(keyList=['f','j'])
-win.flip()
 
-newTaskText.setText(instrTexts[2])
-newTaskText.draw()
-answerGuide.draw()
-img.setImage(scriptloc + '\\happy_example.jpg')
-img.draw()
-win.flip()
-event.waitKeys(keyList=['f','j'])
-win.flip()
-
-newTaskText.setText(instrTexts[3])
-newTaskText.draw()
-answerGuide.draw()
-img.setImage(scriptloc + '\\sad_example.jpg')
-img.draw()
-win.flip()
-event.waitKeys(keyList=['f','j'])
-win.flip()
+#show instructions for faces-task plus example images to practice
+for i in range(len(exampleImages)+1):
+    newTaskText.setText(instrTexts[i+1])
+    newTaskText.draw()
+    if i is not 0:
+        answerGuide.draw()
+        img.setImage(exampleImages[i-1])
+        img.draw()
+    win.flip()
+    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_RELEASE)
+    print('got key press at ' + str(key[0].time))
+    print keyboard.state 
+    win.flip()
 
 # make a text file to save data from face trials
 timestr_face = time.strftime("%Y%m%d-%H_%M_%S")
 faceFileName = 'faceResponses'
 faceDataFile = open(beh_loc+'sub_'+str(subid)+'_'+faceFileName+'_'+timestr_face+'.csv', 'w')  # a simple text file with 'comma-separated-values'
-faceDataFile.write('stimFile,block,showOrder,response,startTime,timeToResponse\n')
+faceDataFile.write('stimFile,block,showOrder,response,startTime,startTimeKeyStyle,keydownTime,keyupTime\n')
 #run face trials
 for n, trialBlock in enumerate(faceTrials):
     if n == 0:
@@ -180,26 +184,20 @@ for n, trialBlock in enumerate(faceTrials):
     win.flip()
     for currTrial in trialBlock:
         startTime = time.time()
-        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation)
+        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard)
         rating = (res['rating'] or 0) #returns 0 in case rating wasn't done within the specified time frame
-        faceDataFile.write('%s,%i,%i,%i,%i,%.5f\n' %(res['stimFile'],n, res['showOrder'], rating,res['startTime'], res['timeStamp']))
+        faceDataFile.write('%s,%i,%i,%i,%.5f,%.5f,%.5f,%.5f\n' %(res['stimFile'], n, res['showOrder'], rating ,res['startTime'],res['startTime2'], res['keydown'],res['keyup']))
 faceDataFile.close()
 
-thankYouText = visual.TextStim(
-        win=win,
-        wrapWidth=500,
-        pos = (0,250),
-        text='Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.',
-        height = 30,
-        color = 'black')
-
-thankYouText.draw()
+newTaskText.setText(instrTexts[-1])
+newTaskText.draw()
 win.flip()
-event.waitKeys()
+keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
 
 if record:
     stoprecording()
 
+io.quit()
 win.close()
 core.quit()
 print('Done')
