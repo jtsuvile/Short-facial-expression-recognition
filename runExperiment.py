@@ -13,28 +13,20 @@ record = False
 
 import sys
 sys.path.append('C:\\Projects\\Faces\\')
-
 import time
 import os
 #import inspect
 from psychopy import visual,event,core, iohub
 import numpy as np
-from trialFunctions import runFaceTrialPosNeg, generateFaceTrials, runTextTrial, generateTextTrials
+from trialFunctions import runFaceTrialPosNeg, generateFaceTrials, runTextTrial, generateTextTrials, initSub
 if record:
     from videoFunctions import startrecording, stoprecording, startRecordingProc
-from randSamples import makeBlocks, permuteBlocks, saveBlocks
 
 scriptloc= 'C:\\Projects\\Faces\\' #os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 mainDir = scriptloc #os.path.dirname(os.path.realpath(__file__))
-
-subid = np.random.randint(100, 999)
-directory = scriptloc + '\\subjects\\'+str(subid)
-video_loc = directory+'\\video\\'
-beh_loc = directory+'\\behavioural\\'
-if not os.path.exists(directory):
-    os.makedirs(directory)
-    os.makedirs(video_loc)
-    os.makedirs(beh_loc)
+subid, textTrials, faceTrials = initSub(mainDir)
+video_loc = mainDir + '\\subjects\\'+str(subid) + '\\video\\'
+beh_loc = mainDir + '\\subjects\\'+str(subid) + '\\behavioural\\'
 
 # instructions are set here - you can find from the code where each gets called.
 # todo: move instructions to a separate text file (not necessarily trivial, psychopy does not seem to want to show newline character when reading from file)
@@ -46,36 +38,21 @@ instrTexts = ['You will soon start a new task where you are asked to evaluate fa
               'Please press  \'j\' or \'f\' to continue the task.',
               'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.']
 
-exampleImages = [scriptloc + '\\happy_example.jpg',
-                 scriptloc + '\\sad_example.jpg']
+taskStartText = "Thank you for participating in this study. The video recording will start as soon as the experiment starts. Please press any key to start the experiment and the video recording."
+
+exampleImages = [scriptloc + '\\sad_example.jpg',
+        scriptloc + '\\happy_example.jpg']
 
 # use iohub and keyboard to capture key press events
 io = iohub.launchHubServer()
 keyboard = io.devices.keyboard
-
-##
-# Create all the tasks that will be shown to the subjects 
-## 
-
-# Make text based trials from PANAS words
-stimuliList = ['Upset','Hostile','Alert','Ashamed','Inspired','Nervous','Determined','Attentive','Afraid','Active']
-textTrials = generateTextTrials(10, stimuliList) #these are not randomised!
-
-# Make face trials and randomise them to blocks
-stimuliPath = mainDir + 'stimuli\\'
-myBlocks = makeBlocks()
-myPermuted = permuteBlocks(myBlocks)
-#todo : add error handling
-if saveBlocks(myPermuted, directory + '\\'):
-    print 'successfully saved trial blocks for subject ' + str(subid)
-faceTrials = []
-for nBlock in range(4):
-    blockDir = directory + '\\block_' + str(nBlock) +'.txt'
-    faceTrials.append(generateFaceTrials(blockDir, stimuliPath))
+mouse = io.devices.mouse
 
 ##    
 # Create the visual elements used in the experiment
 # these are later modified to show different texts, instructions and stimuli
+# 
+# Karen! Change these when playing with fonts etc
 ##
     
 win = visual.Window(
@@ -91,7 +68,7 @@ instructions = visual.TextStim(
     wrapWidth=500,
     pos = (0,300),
     color = 'black')
-fixation = visual.TextStim(win=win, pos=[0,150], text='+', height=200,
+fixation = visual.TextStim(win=win, pos=[0,150], text='+', height=100,
     color = 'black')
 answerGuide = visual.TextStim(
     win=win,
@@ -114,34 +91,43 @@ newTaskText = visual.TextStim(
 # Run the actual experiment
 ##
 
-#Todo: add notification of video recording
+# Todo: add notification of video recording
+# Randomise neg/pos
 
-
-if record:
-    timestr_text = time.strftime("%Y%m%d-%H_%M_%S")    
-    videoOutfile = video_loc+'sub_'+str(subid)#+'_'+'video_'+timestr_text+'.avi'
-    startRecordingProc(videoOutfile)
-
+#
+#if record:
+#    timestr_text = time.strftime("%Y%m%d-%H_%M_%S")    
+#    videoOutfile = video_loc+'sub_'+str(subid)+'_'+'video_'+timestr_text+'.avi'
+#    startRecordingProc(videoOutfile)
+#
 ## give the subject instructions for PANAS
 #newTaskText.setText('Welcome to this experiment.\n\nThe following task consists of a number of words that describe diferent feelings and emotions. Read each item and then indicate in the scale below to what extent you feel this way right now. \n\nPlease press any key to start')
 #newTaskText.draw()
 #win.flip()
-#event.waitKeys()
-##
+#keyboard.waitForKeys()
+#
 ### make a text file to save data from text trials
 #timestr_text = time.strftime("%Y%m%d-%H_%M_%S")
 #textFileName = 'textResponses'
-#textDataFile = open(beh_loc+'sub_'+str(subid)+'_'+textFileName+'_'+timestr_text+'.csv', 'w')  # a simple text file with 'comma-separated-values'
-#textDataFile.write('stimulusWord,showOrder,response,timeStamp,timeToResponse\n')
+#
+## make text files for outputting responses, name the columns
+#textDataFile = open(beh_loc+'sub_'+str(subid)+'_'+textFileName+'_'+timestr_text+'.csv', 'w')  
+#textDataFile.write('stimulusWord,showOrder,response,stimulusTimeStamp,timeToResponse\n')
+#mousePosFile = open(beh_loc+'sub_'+str(subid)+'_mouseTracking_'+timestr_text+'.csv', 'w') 
+#mousePosFile.write('timeStamp,XPos,YPos,deltaX,deltaY,buttonLeft,buttonMiddle,buttonRight\n')
 ###run text trials
 #for currTrial in textTrials:
-#    res = runTextTrial(currTrial, win, instructions, stimText)
+#    mouseRecord = []
+#    res = runTextTrial(currTrial, win, instructions, stimText, mouse, mouseRecord)
 #    rating = (res['rating'] or -1) #returns -1 in case rating wasn't done within the specified time frame
 #    textDataFile.write('%s,%i,%i,%i,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
+#    mousePosFile.writelines('%.5f,%i,%i,%i,%i,%s,%s,%s\n' % (mousePos[0], mousePos[1], mousePos[2], mousePos[3], mousePos[4], mousePos[5], mousePos[6], mousePos[7]) for mousePos in mouseRecord)
 #textDataFile.close()
+#mousePosFile.close()
 
-# give the subject instructions for face rating task
-# the instructions for faces are so long we need to shift the position of the text
+## give the subject instructions for face rating task
+## the instructions for faces are so long we need to shift the position of the text
+keyboard.clearEvents()
 newTaskText.setPos((0,50))
 newTaskText.setText(instrTexts[0])
 newTaskText.draw()
@@ -149,7 +135,7 @@ win.flip()
 keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
 print keyboard.state 
 win.flip()
-
+keyboard.clearEvents()
 # moving text back after the long instructions
 newTaskText.setPos((0,300))
 
@@ -180,7 +166,7 @@ for n, trialBlock in enumerate(faceTrials):
         newTaskText.setText(instrTexts[5])
     newTaskText.draw()
     win.flip()
-    event.waitKeys(keyList=['f','j'])
+    keyboard.waitForKeys(keys=['f','j'], clear=True, etype=keyboard.KEY_RELEASE)
     win.flip()
     for currTrial in trialBlock:
         startTime = time.time()

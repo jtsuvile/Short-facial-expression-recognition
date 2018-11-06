@@ -6,34 +6,17 @@ Created on Wed Oct 24 12:34:35 2018
 """
 from psychopy import visual,event,core
 import os
+import time
 import numpy as np
+from randSamples import makeBlocks, permuteBlocks, saveBlocks
 
-def runFaceTrial(currTrial, win, img, instructions):
-    for key in event.getKeys():
-        if key in ['escape']:
-            core.quit() # quit if they press escape
-            win.close()
-    print(currTrial)
-    win.flip()
-    instructions.setText(currTrial['promptText'])
-    img.setImage(currTrial['trialImage'])
-    ratingScale = visual.RatingScale(win, low=1, high=7, pos=(0,-50), showAccept = False, singleClick = True,size=1.5, textSize=0.5, tickHeight = 0.5,  
-                                     acceptKeys='return', acceptSize=1.0, scale=' ', markerColor ='Yellow', labels=['negative','positive'])
-    win.flip()
-    clock = core.Clock()
-    while ratingScale.noResponse and clock.getTime() <= 10.0:
-        img.draw()
-        instructions.draw()
-        ratingScale.draw()
-        win.flip()
-        if ratingScale.noResponse:
-            rating = None
-        else:
-            rating = ratingScale.getRating()
-        decisionTime = ratingScale.getRT()
-        choiceHistory = ratingScale.getHistory()
-    fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'],'rating': rating, 'timeStamp':decisionTime, 'choiceHistory':choiceHistory}
-    return fullRating
+def getMouse(mouse, recordedMouse):
+    currPos, posDelta = mouse.getPositionAndDelta()
+    currButtons = mouse.getCurrentButtonStates()
+    timestamp = time.time()
+    mouseStatus = [timestamp, currPos[0], currPos[1], posDelta[0], posDelta[1], currButtons[0], currButtons[1], currButtons[2]]
+    recordedMouse.append(mouseStatus)
+    return 
 
 def generateFaceTrials(blockDir, stimuliPath):
     trials = []
@@ -67,7 +50,7 @@ def generateTextTrials(numTrials, stimuliList):
         trialInd+=1
     return trials
 
-def runTextTrial(currTrial, win, instructions, stimText):  
+def runTextTrial(currTrial, win, instructions, stimText, mouse, recordedMouse):  
     for key in event.getKeys():
         if key in ['escape']:
             core.quit() # quit if they press escape
@@ -81,12 +64,13 @@ def runTextTrial(currTrial, win, instructions, stimText):
                                      acceptKeys='return', scale=' ', markerColor='green', labels=['not at all','very much'], textColor='black', lineColor='black')
     
     win.flip()
-    stimulusTime = core.getAbsTime()
+    stimulusTime = time.time()
     clock = core.Clock()
     while ratingScale.noResponse and clock.getTime() <= 10.0:
         stimText.draw()
         instructions.draw()
         ratingScale.draw()
+        getMouse(mouse, recordedMouse)
         win.flip()
         if ratingScale.noResponse:
             rating = None
@@ -100,22 +84,22 @@ def runTextTrial(currTrial, win, instructions, stimText):
 def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard):
     #print(currTrial)
     instructions.setText(currTrial['promptText'])
-    event.clearEvents()
+    #event.clearEvents()
     fixation.draw()
     instructions.draw()
     answerGuide.draw()
     win.flip()
-    core.wait(0.5)
+    core.wait(0.8) # fixation cross before image
     instructions.draw()
     answerGuide.draw()
     img.setImage(currTrial['trialImage'])
     img.draw()
     win.flip()
-    stimulusTime = core.getAbsTime()
+    stimulusTime = time.time()
     stimulusTimeKeyStyle = core.getTime()
     keyboard.clearEvents()
     clock = core.Clock()
-    core.wait(0.5)
+    core.wait(0.5) # time to show stimulus
     fixation.draw()
     instructions.draw()
     answerGuide.draw()
@@ -138,3 +122,34 @@ def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation,
     fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'], 'rating': thisResp, 'startTime': stimulusTime,'startTime2': stimulusTimeKeyStyle, 'keydown':keydown, 'keyup':keyup}
     print(fullRating)
     return fullRating
+
+def initSub(mainDir):
+    ##
+    # Generate subid and create necessary folders
+    ##
+    subid = np.random.randint(100, 999)
+    directory = mainDir + '\\subjects\\'+str(subid)
+    video_loc = directory+'\\video\\'
+    beh_loc = directory+'\\behavioural\\'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        os.makedirs(video_loc)
+        os.makedirs(beh_loc)
+    ##
+    # Create all the tasks that will be shown to the subjects 
+    ##     
+    # Make text based trials from PANAS words
+    stimuliList = ['Upset','Hostile','Alert','Ashamed','Inspired','Nervous','Determined','Attentive','Afraid','Active']
+    textTrials = generateTextTrials(10, stimuliList) #these are not randomised!
+    # Make face trials and randomise them to blocks
+    stimuliPath = mainDir + 'stimuli\\'
+    myBlocks = makeBlocks()
+    myPermuted = permuteBlocks(myBlocks)
+    #todo : add error handling
+    if saveBlocks(myPermuted, directory + '\\'):
+        print 'successfully saved trial blocks for subject ' + str(subid)
+    faceTrials = []
+    for nBlock in range(4):
+        blockDir = directory + '\\block_' + str(nBlock) +'.txt'
+        faceTrials.append(generateFaceTrials(blockDir, stimuliPath))
+    return subid, textTrials, faceTrials
