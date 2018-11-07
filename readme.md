@@ -28,9 +28,7 @@ Install the following on whatever computer you want the code to run on:
 * python starts indexing from 0!
 
 ## TODO
-* add notification of video recording
 * figure out how we want to randomise pos/neg directions and then implement
-* timestamps of practice images
 * select good example images and mask them the way actual stimulus images are
 * try to get the code to shut down more nicely (might be windows 10 specific)
 * get instruction texts from a separate text file (not necessarily trivial, psychopy does not seem to want to show newline character when reading from file. needs to be trouble shooted.)
