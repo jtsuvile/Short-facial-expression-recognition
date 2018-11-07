@@ -31,11 +31,11 @@ video_loc = mainDir + '\\subjects\\'+str(subid) + '\\video\\'
 beh_loc = mainDir + '\\subjects\\'+str(subid) + '\\behavioural\\'
 
 # instructions are set here - you can find from the code where each gets called.
-instrTexts = {'expstart' : "Thank you for participating in this study. The video recording will start as soon as the experiment starts. Please press any key to start the experiment and the video recording.",
-        'facestart': 'You will soon start a new task where you are asked to evaluate facial expressions from photographs. \n\nThe faces will be presented in the centre of the screen and they will appear for about half a second only. For each face decide whether the expression on the face is a negative or a positive one. You may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nThe next face will be presented after you have responded to the previous one or at the latest after 10 seconds since you saw the previous face. There will be a short practice first where your responses will not be scored and I will tell you when the real task starts. \n\nPlease press any key to continue.', 
+instrTexts = {'expstart' : "Thank you for participating in this study. \n\nThe video recording will start as soon as the experiment starts. Please press any key to start the experiment and the video recording.",
+              'panasstart': 'The following task consists of a number of words that describe diferent feelings and emotions. Read each item and then indicate in the scale below to what extent you feel this way right now. \n\nPlease press any key to start',
+              'facestart': 'You will soon start a new task where you are asked to evaluate facial expressions from photographs. \n\nThe faces will be presented in the centre of the screen and they will appear for about half a second only. For each face decide whether the expression on the face is a negative or a positive one. You may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nThe next face will be presented after you have responded to the previous one or at the latest after 10 seconds since you saw the previous face. There will be a short practice first where your responses will not be scored and I will tell you when the real task starts. \n\nPlease press any key to continue.', 
               'faceinstr': 'Please place your hands on the keyboard so that your right index finger is on the \'j\' key and your left index finger is on the \'f\' key. \n\nPlease press  \'j\' or \'f\' to continue.',
-              'neginstr': 'If you think the mood of the person you see is negative, press \'f\' on your keyboard.',
-              'posinstr': 'If you think the mood of the person you see is positive, press \'j\' on your keyboard.',
+              'posneginstr': 'If you think the mood of the person you see is negative, press \'f\' on your keyboard. If you think the mood of the person you see is positive, press \'j\' on your keyboard.',
               'blockbegin': 'Next, you will start the actual experiment. Some of the facial expressions might be very subtle. \n\nRemember, you may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nPlease press  \'j\' or \'f\' to start the actual task.',
               'blockbreak': 'Please press  \'j\' or \'f\' to continue the task.',
               'thankyou': 'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.'}
@@ -91,17 +91,24 @@ newTaskText = visual.TextStim(
 ##
 # Run the actual experiment
 ##
+# Display welcome and warning about recording
+newTaskText.setText(instrTexts['expstart'])
+newTaskText.draw()
+win.flip()
+keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
+keyboard.clearEvents()
 
+#if running video, start recording after keyboard input (above)
 if record:
     timestr_text = time.strftime("%Y%m%d-%H_%M_%S")    
     videoOutfile = video_loc+'sub_'+str(subid)+'_'+'video_'+timestr_text+'.avi'
     startRecordingProc(videoOutfile)
 
 # give the subject instructions for PANAS
-newTaskText.setText('Welcome to this experiment.\n\nThe following task consists of a number of words that describe diferent feelings and emotions. Read each item and then indicate in the scale below to what extent you feel this way right now. \n\nPlease press any key to start')
+newTaskText.setText(instrTexts['panasstart'])
 newTaskText.draw()
 win.flip()
-keyboard.waitForKeys()
+keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
 
 ## make a text file to save data from text trials
 timestr_text = time.strftime("%Y%m%d-%H_%M_%S")
@@ -117,7 +124,7 @@ for currTrial in textTrials:
     mouseRecord = []
     res = runTextTrial(currTrial, win, instructions, stimText, mouse, mouseRecord)
     rating = (res['rating'] or -1) #returns -1 in case rating wasn't done within the specified time frame
-    textDataFile.write('%s,%i,%i,%i,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
+    textDataFile.write('%s,%i,%i,%.5f,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
     mousePosFile.writelines('%.5f,%i,%i,%i,%i,%s,%s,%s\n' % (mousePos[0], mousePos[1], mousePos[2], mousePos[3], mousePos[4], mousePos[5], mousePos[6], mousePos[7]) for mousePos in mouseRecord)
 textDataFile.close()
 mousePosFile.close()
@@ -136,21 +143,27 @@ keyboard.clearEvents()
 # moving text back after the long instructions
 newTaskText.setPos((0,300))
 
-textKeys = ['faceinstr','neginstr','posinstr']
-
 #show instructions for faces-task plus example images to practice
+faceTestDataFile = open(beh_loc+'sub_'+str(subid)+'_timestamps_for_face_tests.csv', 'w')  # a simple text file with 'comma-separated-values'
+faceTestDataFile.write('stimFile,startTime\n')
 for i in range(len(exampleImages)+1):
-    newTaskText.setText(instrTexts[textKeys[i]])
+    if i==0:
+        newTaskText.setText(instrTexts['faceinstr'])
+    else:
+        newTaskText.setText(instrTexts['posneginstr'])
     newTaskText.draw()
     if i is not 0:
         answerGuide.draw()
+        testImageTime = time.time()
         img.setImage(exampleImages[i-1])
         img.draw()
+        faceTestDataFile.write('%s,%.5f\n' %(exampleImages[i-1], testImageTime))
     win.flip()
     key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_RELEASE)
-    print('got key press at ' + str(key[0].time))
-    print keyboard.state 
+    #print('got key press at ' + str(key[0].time))
+    #print keyboard.state 
     win.flip()
+faceTestDataFile.close()
 
 # make a text file to save data from face trials
 timestr_face = time.strftime("%Y%m%d-%H_%M_%S")
