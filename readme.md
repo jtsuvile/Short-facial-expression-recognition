@@ -10,6 +10,7 @@ Install the following on whatever computer you want the code to run on:
  conda install --channel conda-forge pyglet
  pip install moviepy pyosf python-bidi psychopy_ext psychopy json_tricks
  conda install --channel cogsci pygame
+ conda install msgpack-numpy
  ```
 3. Make sure everything works!
 4. Pull the code from the repository to a separate folder. The code folder should have 'stimuli' and 'subjects' subfolders
@@ -29,6 +30,7 @@ Install the following on whatever computer you want the code to run on:
 ## TODO
 * add notification of video recording
 * figure out how we want to randomise pos/neg directions and then implement
+* timestamps of practice images
 * select good example images and mask them the way actual stimulus images are
 * try to get the code to shut down more nicely (might be windows 10 specific)
 * get instruction texts from a separate text file (not necessarily trivial, psychopy does not seem to want to show newline character when reading from file. needs to be trouble shooted.)
