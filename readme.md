@@ -24,6 +24,7 @@ Install the following on whatever computer you want the code to run on:
 ## Random stuff to keep in mind
 * mouse tracking gets upset if mouse is not in the window area when code is started - not a problem if you work with a single screen but can be an issue with dual screen
 * if you want to test code *with* video recording, set record = True at the beginning of runExperiment.py
+* python starts indexing from 0!
 
 ## TODO
 * add notification of video recording

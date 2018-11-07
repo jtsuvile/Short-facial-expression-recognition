@@ -2,6 +2,8 @@
 """
 Created on Mon Oct 29 14:19:19 2018
 
+Helper functions to run video recording in separate thread. 
+
 @author: jsuvilehto
 """
 import cv2
