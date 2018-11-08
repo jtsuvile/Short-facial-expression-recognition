@@ -10,6 +10,7 @@ First version of experimental design related to Pathfinder project 2
 # Change this to True when you want to run video recording, e.g. when really collecting subjects
 # Keeping it at false helps when you work on the code with computers with no webcam or cv2 package
 record = False
+byFrames = False
 
 # change this to point to the folder where you keep the code
 scriptloc= 'C:\\Projects\\Faces\\' #os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -99,10 +100,9 @@ keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
 keyboard.clearEvents()
 
 #if running video, start recording after keyboard input (above)
-if record:
-    timestr_text = time.strftime("%Y%m%d-%H_%M_%S")    
-    videoOutfile = video_loc+'sub_'+str(subid)+'_'+'video_'+timestr_text+'.avi'
-    startRecordingProc(videoOutfile)
+if record:  
+    videoOutfile = video_loc+'sub_'+str(subid)
+    startRecordingProc(videoOutfile, byFrames)
 
 # give the subject instructions for PANAS
 newTaskText.setText(instrTexts['panasstart'])
@@ -145,7 +145,7 @@ newTaskText.setPos((0,300))
 
 #show instructions for faces-task plus example images to practice
 faceTestDataFile = open(beh_loc+'sub_'+str(subid)+'_timestamps_for_face_tests.csv', 'w')  # a simple text file with 'comma-separated-values'
-faceTestDataFile.write('stimFile,startTime\n')
+faceTestDataFile.write('stimFile,startTime,keyDownTime\n')
 for i in range(len(exampleImages)+1):
     if i==0:
         newTaskText.setText(instrTexts['faceinstr'])
@@ -157,9 +157,11 @@ for i in range(len(exampleImages)+1):
         testImageTime = time.time()
         img.setImage(exampleImages[i-1])
         img.draw()
-        faceTestDataFile.write('%s,%.5f\n' %(exampleImages[i-1], testImageTime))
+        #faceTestDataFile.write('%s,%.5f\n' %(exampleImages[i-1], testImageTime))
     win.flip()
-    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_RELEASE)
+    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_PRESS)
+    if i is not 0:
+        faceTestDataFile.write('%s,%.5f,%.5f\n' %(exampleImages[i-1], testImageTime, key.time))
     #print('got key press at ' + str(key[0].time))
     #print keyboard.state 
     win.flip()

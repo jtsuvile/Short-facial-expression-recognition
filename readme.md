@@ -24,11 +24,13 @@ Install the following on whatever computer you want the code to run on:
 
 ## Random stuff to keep in mind
 * mouse tracking gets upset if mouse is not in the window area when code is started - not a problem if you work with a single screen but can be an issue with dual screen
-* if you want to test code *with* video recording, set record = True at the beginning of runExperiment.py
+* if you want to test code *with* video recording, set record = True at the beginning of runExperiment.py. If you want video to record .avi, set byFrames = False. If you want video to record a separate .jpg for each frame, set byFrames=True.
 * python starts indexing from 0!
 
 ## TODO
 * figure out how we want to randomise pos/neg directions and then implement
+* change video to frame by frame capture
+* make sure sub folders don't get overriden
 * select good example images and mask them the way actual stimulus images are
 * try to get the code to shut down more nicely (might be windows 10 specific)
 * get instruction texts from a separate text file (not necessarily trivial, psychopy does not seem to want to show newline character when reading from file. needs to be trouble shooted.)
