@@ -28,6 +28,7 @@ if record:
 
 mainDir = scriptloc 
 subid, textTrials, faceTrials = initSub(mainDir)
+
 video_loc = mainDir + '\\subjects\\'+str(subid) + '\\video\\'
 beh_loc = mainDir + '\\subjects\\'+str(subid) + '\\behavioural\\'
 
@@ -37,6 +38,9 @@ instrTexts = {'expstart' : "Thank you for participating in this study. \n\nThe v
               'facestart': 'You will soon start a new task where you are asked to evaluate facial expressions from photographs. \n\nThe faces will be presented in the centre of the screen and they will appear for about half a second only. For each face decide whether the expression on the face is a negative or a positive one. You may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nThe next face will be presented after you have responded to the previous one or at the latest after 10 seconds since you saw the previous face. There will be a short practice first where your responses will not be scored and I will tell you when the real task starts. \n\nPlease press any key to continue.', 
               'faceinstr': 'Please place your hands on the keyboard so that your right index finger is on the \'j\' key and your left index finger is on the \'f\' key. \n\nPlease press  \'j\' or \'f\' to continue.',
               'posneginstr': 'If you think the mood of the person you see is negative, press \'f\' on your keyboard. If you think the mood of the person you see is positive, press \'j\' on your keyboard.',
+              'posneginstrreverse': 'If you think the mood of the person you see is negative, press \'j\' on your keyboard. If you think the mood of the person you see is positive, press \'f\' on your keyboard.',
+              'posnegarrows': '<--- negative \t\t\t positive --->',
+              'posnegarrowsreverse': '<--- positive \t\t\t negative --->',
               'blockbegin': 'Next, you will start the actual experiment. Some of the facial expressions might be very subtle. \n\nRemember, you may feel like you are guessing, and there are no right or wrong answers. Just answer as quickly as you can according to your gut reaction. \n\nPlease press  \'j\' or \'f\' to start the actual task.',
               'blockbreak': 'Please press  \'j\' or \'f\' to continue the task.',
               'thankyou': 'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.'}
@@ -50,12 +54,22 @@ io = iohub.launchHubServer()
 keyboard = io.devices.keyboard
 mouse = io.devices.mouse
 
+# randomise direction of pos/neg in faces
+posNegDir = np.random.random() 
+if (posNegDir <0.5):
+    thisSubPosNegText = instrTexts['posneginstr']
+    thisSubPosNegArrows = instrTexts['posnegarrows']
+else:
+    thisSubPosNegText = instrTexts['posneginstrreverse']
+    thisSubPosNegArrows = instrTexts['posnegarrowsreverse']
 ##    
 # Create the visual elements used in the experiment
 # these are later modified to show different texts, instructions and stimuli
 # 
 # Karen! Change these when playing with fonts etc
 ##
+
+
     
 win = visual.Window(
     size=[1000, 900],
@@ -72,11 +86,12 @@ instructions = visual.TextStim(
     color = 'black')
 fixation = visual.TextStim(win=win, pos=[0,150], text='+', height=100,
     color = 'black')
+
 answerGuide = visual.TextStim(
     win=win,
     wrapWidth=500,
     pos = (0,-10),
-    text = '<--- negative \t\t\t positive --->',
+    text = thisSubPosNegArrows,
     color = 'black')
 stimText = visual.TextStim(
     win=win,
@@ -145,23 +160,24 @@ newTaskText.setPos((0,300))
 
 #show instructions for faces-task plus example images to practice
 faceTestDataFile = open(beh_loc+'sub_'+str(subid)+'_timestamps_for_face_tests.csv', 'w')  # a simple text file with 'comma-separated-values'
-faceTestDataFile.write('stimFile,startTime,keyDownTime\n')
+faceTestDataFile.write('stimFile,imageShowTime,imageShowTimeInKeyTimeType,keyDown, keyUp\n')
 for i in range(len(exampleImages)+1):
     if i==0:
         newTaskText.setText(instrTexts['faceinstr'])
     else:
-        newTaskText.setText(instrTexts['posneginstr'])
+        newTaskText.setText(thisSubPosNegText)
     newTaskText.draw()
     if i is not 0:
         answerGuide.draw()
         testImageTime = time.time()
+        testImageKeyTypeTime = core.getTime()
         img.setImage(exampleImages[i-1])
         img.draw()
         #faceTestDataFile.write('%s,%.5f\n' %(exampleImages[i-1], testImageTime))
     win.flip()
-    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_PRESS)
+    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_RELEASE)
     if i is not 0:
-        faceTestDataFile.write('%s,%.5f,%.5f\n' %(exampleImages[i-1], testImageTime, key.time))
+        faceTestDataFile.write('%s,%.5f,%.5f,%.5f,%.5f\n' %(exampleImages[i-1], testImageTime,testImageKeyTypeTime, key[-1].time - key[-1].duration, key[-1].time))
     #print('got key press at ' + str(key[0].time))
     #print keyboard.state 
     win.flip()
@@ -174,6 +190,7 @@ faceDataFile = open(beh_loc+'sub_'+str(subid)+'_'+faceFileName+'_'+timestr_face+
 faceDataFile.write('stimFile,block,showOrder,response,startTime,startTimeKeyStyle,keydownTime,keyupTime\n')
 #run face trials
 for n, trialBlock in enumerate(faceTrials):
+    keyboard.clearEvents()
     if n == 0:
         newTaskText.setText(instrTexts['blockbegin'])
     else:
