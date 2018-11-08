@@ -81,7 +81,7 @@ def runTextTrial(currTrial, win, instructions, stimText, mouse, recordedMouse):
     fullRating = {'stimText':currTrial['stimulusText'],'showOrder': currTrial['trialIndex'],'rating': rating, 'startTime': stimulusTime, 'timeStamp':decisionTime, 'choiceHistory':choiceHistory}
     return fullRating
 
-def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard):
+def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard, posNegDir):
     #print(currTrial)
     instructions.setText(currTrial['promptText'])
     #event.clearEvents()
@@ -113,9 +113,15 @@ def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation,
             keyup = thisKey.time
             keydown = thisKey.time - thisKey.duration
             if thisKey.key=='f':
-                thisResp = -1            # negative
+                if posNegDir < 0.5:
+                    thisResp = -1            # negative
+                else: # reverse coding
+                    thisResp = 2            # positive, reverse coding
             elif thisKey.key=='j':
-                thisResp = 1             # positive
+                if posNegDir < 0.5:
+                    thisResp = 1            # positive, normal direction
+                else: 
+                    thisResp = -2           # negative, reverse coding
             elif thisKey.key in ['q', 'escape']:
                 win.close()
                 core.quit()

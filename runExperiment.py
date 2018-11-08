@@ -201,7 +201,7 @@ for n, trialBlock in enumerate(faceTrials):
     win.flip()
     for currTrial in trialBlock:
         startTime = time.time()
-        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard)
+        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard, posNegDir)
         rating = (res['rating'] or 0) #returns 0 in case rating wasn't done within the specified time frame
         faceDataFile.write('%s,%i,%i,%i,%.5f,%.5f,%.5f,%.5f\n' %(res['stimFile'], n, res['showOrder'], rating ,res['startTime'],res['startTime2'], res['keydown'],res['keyup']))
 faceDataFile.close()
