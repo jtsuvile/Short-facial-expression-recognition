@@ -127,14 +127,15 @@ def initSub(mainDir):
     ##
     # Generate subid and create necessary folders
     ##
-    subid = np.random.randint(100, 999)
+    subid = np.random.randint(1000, 9999)
+    while os.path.exists(mainDir + '\\subjects\\'+str(subid)):
+        subid = np.random.randint(1000, 9999)
     directory = mainDir + '\\subjects\\'+str(subid)
     video_loc = directory+'\\video\\'
     beh_loc = directory+'\\behavioural\\'
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        os.makedirs(video_loc)
-        os.makedirs(beh_loc)
+    os.makedirs(directory)
+    os.makedirs(video_loc)
+    os.makedirs(beh_loc)
     ##
     # Create all the tasks that will be shown to the subjects 
     ##     
