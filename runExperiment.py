@@ -97,10 +97,11 @@ stimText = visual.TextStim(
     win=win,
     wrapWidth=500,
     pos = (0,150),
+    height=5,
     color = 'black')
 newTaskText = visual.TextStim(
     win=win,
-    wrapWidth=500,
+    wrapWidth=1000,
     pos = (0,250),
     color = 'black')
 
