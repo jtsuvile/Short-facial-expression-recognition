@@ -6,8 +6,8 @@ Install the following on whatever computer you want the code to run on:
 1. Anaconda2 with Python 2.7 (all packages do not work with python 3)
 2. Then, run the following in conda prompt (from https://github.com/lupyanlab/lab-computer/wiki/Install-psychopy-on-Anaconda-python)
  ```
- conda install numpy scipy matplotlib pandas pyopengl wxpython lxml openpyxl xlrd configobj pyyaml gevent pillow greenlet msgpack-python psutil pytables requests seaborn future opencv
- conda install --channel conda-forge pyglet
+ conda install numpy scipy matplotlib pandas pyopengl wxpython lxml openpyxl xlrd configobj pyyaml gevent pillow greenlet msgpack-python psutil pytables requests seaborn future 
+ conda install --channel conda-forge pyglet opencv
  pip install moviepy pyosf python-bidi psychopy_ext psychopy json_tricks
  conda install --channel cogsci pygame
  conda install msgpack-numpy
