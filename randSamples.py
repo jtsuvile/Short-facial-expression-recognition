@@ -13,9 +13,17 @@ import numpy as np
 
 def makeBlocks():
     emotionNames = ['Happy','Sad','Fear','Surprise']
-    actorNames = ['F1','F2','M1','M2']
+    femaleActors = ['F3','F4','F5','F6']
+    maleActors = ['M3','M4','M5','M6']
+    if len(maleActors) >2 or len(femaleActors) > 2:
+        # below, select 2 male and 2 female actors to use for this sub
+        # not super pretty but works for piloting
+        mtemp = [maleActors[i] for i in np.random.choice(len(maleActors), size=2, replace=False)]
+        ftemp =  [femaleActors[i] for i in np.random.choice(len(maleActors), size=2, replace=False)]
+        actorNames = mtemp + ftemp
+    else:
+        actorNames = femaleActors + maleActors
     levelNames = ['02','03','04','05','06']
-    #def makeSamples():
     blocks =[[' '] * 20 for i in range(4)]
     levels = range(5)
     emoOrder = np.random.permutation(emotionNames)
@@ -26,7 +34,7 @@ def makeBlocks():
         for level in levels:
             runningNumber = counter*5+level
             for ind in range(4):
-                blocks[ind][runningNumber] = actorOrdered[ind] +'_Neutral_'+ emoOrder[counter] + levelNames[level] + '.jpg'
+                blocks[ind][runningNumber] = actorOrdered[ind] +'_Neutral_'+ emoOrder[counter] + levelNames[level] + '.png'
             actorOrdered.insert(0, actorOrdered.pop())
     return blocks
 

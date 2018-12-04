@@ -69,40 +69,49 @@ else:
 # Karen! Change these when playing with fonts etc
 ##
 
+generalTextSize = 30
+generalWrapWidth = 800
 
-    
 win = visual.Window(
     size=[1000, 900],
     units="pix",
     fullscr=True,
-    color = [0.079,0.079,0.079])
+    #color = [0.079,0.079,0.079]
+    color = [0.4,0.4,0.4])
 
 img = visual.ImageStim(win=win, mask=None,
-                       interpolate=True, pos=(0,150))
+                       interpolate=True, pos=(0,50))
+
+fixation = visual.TextStim(win=win, pos=[0,50], text='+', height=150,
+    color = 'black')
+
 instructions = visual.TextStim(
     win=win,
-    wrapWidth=500,
+    height = generalTextSize,
+    wrapWidth=generalWrapWidth,
     pos = (0,300),
-    color = 'black')
-fixation = visual.TextStim(win=win, pos=[0,150], text='+', height=100,
     color = 'black')
 
 answerGuide = visual.TextStim(
     win=win,
-    wrapWidth=500,
-    pos = (0,-10),
+    height = generalTextSize,
+    wrapWidth=generalWrapWidth,
+    pos = (0,-200),
     text = thisSubPosNegArrows,
     color = 'black')
+
 stimText = visual.TextStim(
     win=win,
-    wrapWidth=500,
-    pos = (0,150),
+    wrapWidth=generalWrapWidth,
+    pos = (0,180),
     height=5,
     color = 'black')
+
 newTaskText = visual.TextStim(
+    height = generalTextSize,
     win=win,
-    wrapWidth=1000,
-    pos = (0,250),
+    wrapWidth=generalWrapWidth,
+    pos = (0,350),
     color = 'black')
 
 ##
