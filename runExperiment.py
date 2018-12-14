@@ -18,13 +18,13 @@ scriptloc= 'C:\\Projects\\Faces\\' #os.path.dirname(os.path.abspath(inspect.getf
 import sys
 sys.path.append(scriptloc)
 import time
-import os
+#import os
 #import inspect
-from psychopy import visual,event,core, iohub
+from psychopy import visual, core, iohub
 import numpy as np
-from trialFunctions import runFaceTrialPosNeg, generateFaceTrials, runTextTrial, generateTextTrials, initSub
+from trialFunctions import runFaceTrialPosNeg, runTextTrial, initSub
 if record:
-    from videoFunctions import startrecording, stoprecording, startRecordingProc
+    from videoFunctions import stoprecording, startRecordingProc
 
 mainDir = scriptloc 
 subid, textTrials, faceTrials = initSub(mainDir)
@@ -46,8 +46,10 @@ instrTexts = {'expstart' : "Thank you for participating in this study. \n\nThe v
               'thankyou': 'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.'}
 
 
-exampleImages = [scriptloc + '\\sad_example.jpg',
-        scriptloc + '\\happy_example.jpg']
+exampleImages = [scriptloc + '\\example_images\\sad_example.jpg',
+        scriptloc + '\\example_images\\happy_example.jpg',
+        scriptloc + '\\example_images\\fear_example.jpg',
+        scriptloc + '\\example_images\\surprise_example.jpg']
 
 # use iohub and keyboard to capture key press events
 io = iohub.launchHubServer()
@@ -70,7 +72,7 @@ else:
 ##
 
 generalTextSize = 30
-generalWrapWidth = 800
+generalWrapWidth = 850
 
 win = visual.Window(
     size=[1000, 900],
@@ -167,7 +169,7 @@ win.flip()
 keyboard.clearEvents()
 # moving text back after the long instructions
 newTaskText.setPos((0,300))
-
+img.setPos((0,30))
 #show instructions for faces-task plus example images to practice
 faceTestDataFile = open(beh_loc+'sub_'+str(subid)+'_timestamps_for_face_tests.csv', 'w')  # a simple text file with 'comma-separated-values'
 faceTestDataFile.write('stimFile,imageShowTime,imageShowTimeInKeyTimeType,keyDown, keyUp\n')
@@ -193,6 +195,8 @@ for i in range(len(exampleImages)+1):
     win.flip()
 faceTestDataFile.close()
 
+#revert back to regular positioning of stimulus image
+img.setPos((0,50))
 # make a text file to save data from face trials
 timestr_face = time.strftime("%Y%m%d-%H_%M_%S")
 faceFileName = 'faceResponses'
@@ -227,4 +231,5 @@ if record:
 io.quit()
 win.close()
 core.quit()
+    
 print('Done')
