@@ -46,10 +46,10 @@ instrTexts = {'expstart' : "Thank you for participating in this study. \n\nThe v
               'thankyou': 'Thank you subject ' + str(subid) + ',\nyou have now completed the whole experiment. \n\nPress any key to close this window.'}
 
 
-exampleImages = [scriptloc + '\\example_images\\sad_example.jpg',
-        scriptloc + '\\example_images\\happy_example.jpg',
-        scriptloc + '\\example_images\\fear_example.jpg',
-        scriptloc + '\\example_images\\surprise_example.jpg']
+exampleImages = [scriptloc + '\\example_images\\sad_example.JPG',
+        scriptloc + '\\example_images\\happy_example.JPG',
+        scriptloc + '\\example_images\\fear_example.JPG',
+        scriptloc + '\\example_images\\surprise_example.JPG']
 
 # use iohub and keyboard to capture key press events
 io = iohub.launchHubServer()
