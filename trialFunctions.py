@@ -50,7 +50,7 @@ def generateTextTrials(numTrials, stimuliList):
         trialInd+=1
     return trials
 
-def runTextTrial(currTrial, win, instructions, stimText, mouse, recordedMouse):  
+def runTextTrial(currTrial, win, instructions, stimText):  
     for key in event.getKeys():
         if key in ['escape']:
             core.quit() # quit if they press escape
@@ -70,7 +70,6 @@ def runTextTrial(currTrial, win, instructions, stimText, mouse, recordedMouse):
         stimText.draw()
         instructions.draw()
         ratingScale.draw()
-        getMouse(mouse, recordedMouse)
         win.flip()
         if ratingScale.noResponse:
             rating = None
@@ -81,7 +80,7 @@ def runTextTrial(currTrial, win, instructions, stimText, mouse, recordedMouse):
     fullRating = {'stimText':currTrial['stimulusText'],'showOrder': currTrial['trialIndex'],'rating': rating, 'startTime': stimulusTime, 'timeStamp':decisionTime, 'choiceHistory':choiceHistory}
     return fullRating
 
-def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard, posNegDir):
+def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, posNegDir):
     #print(currTrial)
     instructions.setText(currTrial['promptText'])
     #event.clearEvents()
@@ -90,42 +89,41 @@ def runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation,
     answerGuide.draw()
     win.flip()
     core.wait(0.8) # fixation cross before image
+    event.clearEvents()
     instructions.draw()
     answerGuide.draw()
+    RT = core.Clock()
     img.setImage(currTrial['trialImage'])
     img.draw()
     win.flip()
     stimulusTime = time.time()
-    stimulusTimeKeyStyle = core.getTime()
-    keyboard.clearEvents()
-    clock = core.Clock()
-    core.wait(0.5) # time to show stimulus
+    RT.reset()
+    core.wait(0.5) # time to show stimfulus
     fixation.draw()
     instructions.draw()
     answerGuide.draw()
     win.flip()
     thisResp=0
-    keydown = 0
-    keyup = 0
+    reactionTime = 10
+    clock = core.Clock()
     while thisResp==0 and clock.getTime() <= 10.0:
-        allKeys=keyboard.getKeys(keys=['f','j','q'], clear=True, etype=keyboard.KEY_RELEASE)
+        allKeys=event.getKeys(keyList=['f','j','q'],timeStamped=RT)
         for thisKey in allKeys:
-            keyup = thisKey.time
-            keydown = thisKey.time - thisKey.duration
-            if thisKey.key=='f':
+            reactionTime = thisKey[1]
+            if thisKey[0]=='f':
                 if posNegDir < 0.5:
                     thisResp = -1            # negative
                 else: # reverse coding
                     thisResp = 2            # positive, reverse coding
-            elif thisKey.key=='j':
+            elif thisKey[0]=='j':
                 if posNegDir < 0.5:
                     thisResp = 1            # positive, normal direction
                 else: 
                     thisResp = -2           # negative, reverse coding
-            elif thisKey.key in ['q', 'escape']:
+            elif thisKey[0] in ['q', 'escape']:
                 win.close()
                 core.quit()
-    fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'], 'rating': thisResp, 'startTime': stimulusTime,'startTime2': stimulusTimeKeyStyle, 'keydown':keydown, 'keyup':keyup}
+    fullRating = {'stimFile':currTrial['trialImage'],'showOrder': currTrial['trialIndex'], 'rating': thisResp, 'startTime': stimulusTime,'reactionTime': reactionTime}
     print(fullRating)
     return fullRating
 
@@ -137,10 +135,10 @@ def initSub(mainDir):
     while os.path.exists(mainDir + '\\subjects\\'+str(subid)):
         subid = np.random.randint(1000, 9999)
     directory = mainDir + '\\subjects\\'+str(subid)
-    video_loc = directory+'\\video\\'
+    # video_loc = directory+'\\video\\'
     beh_loc = directory+'\\behavioural\\'
     os.makedirs(directory)
-    os.makedirs(video_loc)
+    #os.makedirs(video_loc)
     os.makedirs(beh_loc)
     ##
     # Create all the tasks that will be shown to the subjects 

@@ -20,7 +20,7 @@ sys.path.append(scriptloc)
 import time
 #import os
 #import inspect
-from psychopy import visual, core, iohub
+from psychopy import visual, event, core
 import numpy as np
 from trialFunctions import runFaceTrialPosNeg, runTextTrial, initSub
 if record:
@@ -51,10 +51,6 @@ exampleImages = [scriptloc + '\\example_images\\sad_example.JPG',
         scriptloc + '\\example_images\\fear_example.JPG',
         scriptloc + '\\example_images\\surprise_example.JPG']
 
-# use iohub and keyboard to capture key press events
-io = iohub.launchHubServer()
-keyboard = io.devices.keyboard
-mouse = io.devices.mouse
 
 # randomise direction of pos/neg in faces
 posNegDir = np.random.random() 
@@ -123,8 +119,7 @@ newTaskText = visual.TextStim(
 newTaskText.setText(instrTexts['expstart'])
 newTaskText.draw()
 win.flip()
-keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
-keyboard.clearEvents()
+event.waitKeys()
 
 #if running video, start recording after keyboard input (above)
 if record:  
@@ -135,7 +130,7 @@ if record:
 newTaskText.setText(instrTexts['panasstart'])
 newTaskText.draw()
 win.flip()
-keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
+event.waitKeys()
 
 ## make a text file to save data from text trials
 timestr_text = time.strftime("%Y%m%d-%H_%M_%S")
@@ -144,54 +139,49 @@ textFileName = 'textResponses'
 # make text files for outputting responses, name the columns
 textDataFile = open(beh_loc+'sub_'+str(subid)+'_'+textFileName+'_'+timestr_text+'.csv', 'w')  
 textDataFile.write('stimulusWord,showOrder,response,stimulusTimeStamp,timeToResponse\n')
-mousePosFile = open(beh_loc+'sub_'+str(subid)+'_mouseTracking_'+timestr_text+'.csv', 'w') 
-mousePosFile.write('timeStamp,XPos,YPos,deltaX,deltaY,buttonLeft,buttonMiddle,buttonRight\n')
 ##run text trials
 for currTrial in textTrials:
-    mouseRecord = []
-    res = runTextTrial(currTrial, win, instructions, stimText, mouse, mouseRecord)
+    #mouseRecord = []
+    res = runTextTrial(currTrial, win, instructions, stimText)
     rating = (res['rating'] or -1) #returns -1 in case rating wasn't done within the specified time frame
     textDataFile.write('%s,%i,%i,%.5f,%.5f\n' %(res['stimText'], res['showOrder'], rating,res['startTime'], res['timeStamp']))
-    mousePosFile.writelines('%.5f,%i,%i,%i,%i,%s,%s,%s\n' % (mousePos[0], mousePos[1], mousePos[2], mousePos[3], mousePos[4], mousePos[5], mousePos[6], mousePos[7]) for mousePos in mouseRecord)
+    #mousePosFile.writelines('%.5f,%i,%i,%i,%i,%s,%s,%s\n' % (mousePos[0], mousePos[1], mousePos[2], mousePos[3], mousePos[4], mousePos[5], mousePos[6], mousePos[7]) for mousePos in mouseRecord)
 textDataFile.close()
-mousePosFile.close()
+
 
 ## give the subject instructions for face rating task
 ## the instructions for faces are so long we need to shift the position of the text
-keyboard.clearEvents()
 newTaskText.setPos((0,50))
 newTaskText.setText(instrTexts['facestart'])
 newTaskText.draw()
 win.flip()
-keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
-print keyboard.state 
+event.waitKeys()
 win.flip()
-keyboard.clearEvents()
 # moving text back after the long instructions
 newTaskText.setPos((0,300))
 img.setPos((0,30))
+#win.flip()
+#event.waitKeys()
 #show instructions for faces-task plus example images to practice
 faceTestDataFile = open(beh_loc+'sub_'+str(subid)+'_timestamps_for_face_tests.csv', 'w')  # a simple text file with 'comma-separated-values'
-faceTestDataFile.write('stimFile,imageShowTime,imageShowTimeInKeyTimeType,keyDown, keyUp\n')
+faceTestDataFile.write('stimFile,imageShowTime,key\n')
 for i in range(len(exampleImages)+1):
     if i==0:
         newTaskText.setText(instrTexts['faceinstr'])
+        newTaskText.draw()
+        win.flip()
+        event.waitKeys(keyList=['f','j','q'])
     else:
+        event.clearEvents()
         newTaskText.setText(thisSubPosNegText)
-    newTaskText.draw()
-    if i is not 0:
+        newTaskText.draw()
         answerGuide.draw()
         testImageTime = time.time()
-        testImageKeyTypeTime = core.getTime()
         img.setImage(exampleImages[i-1])
         img.draw()
-        #faceTestDataFile.write('%s,%.5f\n' %(exampleImages[i-1], testImageTime))
-    win.flip()
-    key = keyboard.waitForKeys(keys=['f','j'],clear=True, etype=keyboard.KEY_RELEASE)
-    if i is not 0:
-        faceTestDataFile.write('%s,%.5f,%.5f,%.5f,%.5f\n' %(exampleImages[i-1], testImageTime,testImageKeyTypeTime, key[-1].time - key[-1].duration, key[-1].time))
-    #print('got key press at ' + str(key[0].time))
-    #print keyboard.state 
+        win.flip()
+        respKey = event.waitKeys(keyList=['f','j','q'])
+        faceTestDataFile.write('%s,%.5f,%s\n' %(exampleImages[i-1], testImageTime, respKey[0]))
     win.flip()
 faceTestDataFile.close()
 
@@ -201,34 +191,31 @@ img.setPos((0,50))
 timestr_face = time.strftime("%Y%m%d-%H_%M_%S")
 faceFileName = 'faceResponses'
 faceDataFile = open(beh_loc+'sub_'+str(subid)+'_'+faceFileName+'_'+timestr_face+'.csv', 'w')  # a simple text file with 'comma-separated-values'
-faceDataFile.write('stimFile,block,showOrder,response,startTime,startTimeKeyStyle,keydownTime,keyupTime\n')
+faceDataFile.write('stimFile,block,showOrder,response,startTime,timeToResponse\n')
 #run face trials
 for n, trialBlock in enumerate(faceTrials):
-    keyboard.clearEvents()
     if n == 0:
         newTaskText.setText(instrTexts['blockbegin'])
     else:
         newTaskText.setText(instrTexts['blockbreak'])
     newTaskText.draw()
     win.flip()
-    keyboard.waitForKeys(keys=['f','j'], clear=True, etype=keyboard.KEY_RELEASE)
+    event.waitKeys(keyList=['f','j'])
     win.flip()
     for currTrial in trialBlock:
         startTime = time.time()
-        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, keyboard, posNegDir)
+        res = runFaceTrialPosNeg(currTrial, win, img, instructions, answerGuide, fixation, posNegDir)
         rating = (res['rating'] or 0) #returns 0 in case rating wasn't done within the specified time frame
-        faceDataFile.write('%s,%i,%i,%i,%.5f,%.5f,%.5f,%.5f\n' %(res['stimFile'], n, res['showOrder'], rating ,res['startTime'],res['startTime2'], res['keydown'],res['keyup']))
+        faceDataFile.write('%s,%i,%i,%i,%.5f,%.5f\n' %(res['stimFile'], n, res['showOrder'], rating ,res['startTime'],res['reactionTime']))
 faceDataFile.close()
 
 newTaskText.setText(instrTexts['thankyou'])
 newTaskText.draw()
 win.flip()
-keyboard.waitForKeys(clear=True, etype=keyboard.KEY_RELEASE)
-
+event.waitKeys()
 if record:
     stoprecording()
 
-io.quit()
 win.close()
 core.quit()
     
